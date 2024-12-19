@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Invitation</title>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 200vh; /* 스크롤 테스트용, 추후 필요에 따라 수정 가능 */
+    font-family: sans-serif;
+    color: #fff;
+    overflow-x: hidden;
+    background: black; /* 여분 공간은 항상 검은색 */
+  }
+
+  .bg-container {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    overflow: hidden;
+    z-index: -1;
+    background: black; /* 배경 기본은 검은색 */
+  }
+
+  .bg {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: contain; 
+    background-color: black; 
+    transition: opacity 0.5s ease;
+  }
+
+  .bg1 {
+    z-index: 2;
+    background-image: url('background1.jpg'); /* 실제 이미지 경로로 수정 */
+  }
+
+  .bg2 {
+    z-index: 1;
+    background-image: url('background2.jpg'); /* 실제 이미지 경로로 수정 */
+  }
+
+  .black-overlay {
+    position: fixed;
+    top:0; left:0;
+    width:100%; height:100%;
+    background: rgba(0,0,0,0);
+    pointer-events: none; 
+    transition: background 0.5s ease;
+    z-index: 3;
+  }
+
+  .personal-message {
+    position: fixed;
+    bottom: -50%;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    width: 80%;
+    font-size: 2rem;
+    line-height: 1.5;
+    opacity: 0;
+    transition: opacity 0.5s ease, bottom 0.5s ease;
+    z-index: 4;
+    white-space: pre-wrap; /* 메시지 내 줄바꿈 반영 */
+  }
+</style>
+</head>
+<body>
+<div class="bg-container">
+  <div class="bg bg2"></div>
+  <div class="bg bg1"></div>
+</div>
+<div class="black-overlay"></div>
+<div class="personal-message" id="personalMessage"></div>
+
+<script>
+  // URL 파라미터에서 user 값 추출
+  const params = new URLSearchParams(window.location.search);
+  const user = params.get('user') || 'default';
+
+  // JSON에서 데이터 가져오기
+  // 예: data.json 형식
+  // {
+  //   "john": "John님, 행사에 초대합니다!",
+  //   "mary": "Mary님, 이 특별한 자리에 함께해주세요!",
+  //   "default": "친구님, 이번 행사의 초대를 받아주세요!"
+  // }
+  fetch('data.json')
+    .then(response => response.json())
+    .then(data => {
+      const messageElem = document.getElementById('personalMessage');
+      messageElem.textContent = data[user] || data['default'];
+    });
+
+  // 스크롤 시 애니메이션 처리
+  window.addEventListener('scroll', () => {
+    const scrollY = window.scrollY;
+    const vh = window.innerHeight;
+
+    const bg1 = document.querySelector('.bg1');
+    const blackOverlay = document.querySelector('.black-overlay');
+    const personalMessage = document.getElementById('personalMessage');
+
+    // 진행도(0vh일 때 0, 1vh당 progress=0.01, 즉 60vh이면 progress=0.6)
+    const progress = scrollY / vh; 
+
+    // bg1 투명도: 0vh -> 1, 100vh -> 0 (즉 progress=1일때 완전 투명)
+    let bg1Opacity = 1 - progress; 
+    if(bg1Opacity < 0) bg1Opacity = 0;
+    if(bg1Opacity > 1) bg1Opacity = 1;
+    bg1.style.opacity = bg1Opacity;
+
+    // overlay 불투명도: 0vh -> 0, 60vh -> 0.6 (progress=0.6일때 0.6)
+    let overlayOpacity = progress * (0.6 / 0.6); 
+    // progress >= 1이면 overlayOpacity가 1을 넘어갈 수 있으니 제한
+    if(overlayOpacity > 0.6) overlayOpacity = 0.6;
+    if(overlayOpacity < 0) overlayOpacity = 0;
+    blackOverlay.style.background = `rgba(0,0,0,${overlayOpacity})`;
+
+    // 메시지 애니메이션:
+    // 60vh 이후부터 나타나기 시작해서 100vh에 완전히 나타남.
+    // progress=0.6일 때 bottom=-50%에서 슬슬 올라오기 시작
+    // progress=1일 때 bottom=20% 정도에 도달하고, opacity=1
+    if(progress >= 0.6) {
+      const messageProgress = (progress - 0.6) / 0.4; // 0~1 사이로 변환
+      // bottom 위치: -50% ~ 20% 사이로 변화
+      let bottomPosition = -50 + (70 * messageProgress); // -50% -> 20%
+      personalMessage.style.bottom = bottomPosition + '%';
+      personalMessage.style.opacity = messageProgress;
+    } else {
+      personalMessage.style.bottom = '-50%';
+      personalMessage.style.opacity = 0;
+    }
+  });
+
+  // 추가적으로 필요하다면 resize 이벤트 핸들러를 두어 화면 비율에 따라 재계산하는 로직을 추가할 수 있지만
+  // 여기서는 background-size: contain을 사용했으므로 이미지 비율 유지에 문제 없음.
+</script>
+</body>
+</html>
