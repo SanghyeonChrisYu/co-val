@@ -9,7 +9,7 @@
 <meta property="og:title" content="똑똑! 특별 카드가 도착했어요" />
 <meta property="og:type" content="website" />
 <meta property="og:image" content="thumbnail.jpg" />
-<meta property="og:description" content="특별한 초대장이 도착했습니다" />
+<!-- <meta property="og:description" content="특별한 초대장이 도착했습니다" /> -->
 
 
 <style>
@@ -78,8 +78,7 @@
     height:65vh;
     display: flex;
     justify-content: center;
-    /* align-items: flex-start; */
-    align-items: center;
+    align-items: center; /* 기본값은 center */
     text-align: center;
     font-size: min(calc(100vh * (1501/1944) * 0.035), 2rem);
     line-height: 1.5;
@@ -101,6 +100,14 @@
   /* Webkit (Chrome, Safari, Opera) 브라우저용 스크롤바 숨김 */
   .personal-message::-webkit-scrollbar {
     display: none;
+  }
+
+  /* 모바일 환경 대응 */
+  @media screen and (max-width: 768px) {
+    .personal-message {
+      align-items: flex-start; /* 모바일에서는 위쪽 정렬 */
+      padding-top: 2rem; /* 위쪽 여백 추가 */
+    }
   }
 </style>
 </head>
